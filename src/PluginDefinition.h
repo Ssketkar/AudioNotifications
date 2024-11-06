@@ -22,13 +22,21 @@
 // All difinitions of plugin interface
 //
 #include "PluginInterface.h"
+#include "Notepad_plus_msgs.h"     // Include Notepad++ message definitions
 
 //-------------------------------------//
 //-- STEP 1. DEFINE YOUR PLUGIN NAME --//
 //-------------------------------------//
 // Here define your plugin name
 //
-const TCHAR NPP_PLUGIN_NAME[] = TEXT("Notepad++ plugin template");
+const TCHAR NPP_PLUGIN_NAME[] = TEXT("Audio Notifications");
+
+enum AUDIO_NOTIFICATIONS
+{
+    AUDIO_NOTIFICATIONS_CREATE_FILE,
+    AUDIO_NOTIFICATIONS_SAVE_FILE,
+    AUDIO_NOTIFICATIONS_MAX
+};
 
 //-----------------------------------------------//
 //-- STEP 2. DEFINE YOUR PLUGIN COMMAND NUMBER --//
@@ -36,7 +44,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("Notepad++ plugin template");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 2;
+const int nbFunc = AUDIO_NOTIFICATIONS_MAX;
 
 
 //
@@ -64,13 +72,12 @@ void commandMenuCleanUp();
 //
 // Function which sets your command 
 //
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk = NULL, bool check0nInit = false);
+bool setCommand(size_t index,TCHAR* cmdName,PFUNCPLUGINCMD pFunc,ShortcutKey* sk = NULL,bool check0nInit = false);
 
 
 //
 // Your plugin command functions
 //
-void hello();
-void helloDlg();
+void onFileSave();
 
 #endif //PLUGINDEFINITION_H

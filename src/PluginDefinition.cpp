@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <Windows.h>
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 
@@ -28,18 +29,35 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
+bool notifyOnSave;
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
 void pluginInit(HANDLE /*hModule*/)
 {
+    notifyOnSave = true;
 }
 
 //
 // Here you can do the clean up, save the parameters (if any) for the next session
 //
-void pluginCleanUp()
-{
+void pluginCleanUp() {
+}
+
+// This function is called every time a file is saved in Notepad++
+void onFileSave() {
+    // Example action: display a message or modify the document.
+    notifyOnSave = !notifyOnSave;
+    ::CheckMenuItem(::GetMenu(nppData._nppHandle),funcItem[AUDIO_NOTIFICATIONS_SAVE_FILE]._cmdID,MF_BYCOMMAND | (notifyOnSave ? MF_CHECKED : MF_UNCHECKED));
+    if(notifyOnSave)
+    {
+        MessageBox(NULL,TEXT("File save audio notification is enabled!"),TEXT("Save Event Triggered"),MB_OK);
+    }
+    // Additional actions can be performed here, such as:
+    // - Logging the save event
+    // - Modifying the document's content
+    // - Performing automated backups, etc.
 }
 
 //
@@ -58,8 +76,8 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Hello Notepad++"), hello, NULL, false);
-    setCommand(1, TEXT("Hello (with dialog)"), helloDlg, NULL, false);
+    setCommand(AUDIO_NOTIFICATIONS_SAVE_FILE,TEXT("On Save"),onFileSave,NULL,true);
+    //setCommand(1, TEXT("Hello (with dialog)"), helloDlg, NULL, false);
 }
 
 //
@@ -67,50 +85,25 @@ void commandMenuInit()
 //
 void commandMenuCleanUp()
 {
-	// Don't forget to deallocate your shortcut here
+    // Don't forget to deallocate your shortcut here
 }
 
 
 //
 // This function help you to initialize your plugin commands
 //
-bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey *sk, bool check0nInit) 
+bool setCommand(size_t index,TCHAR* cmdName,PFUNCPLUGINCMD pFunc,ShortcutKey* sk,bool check0nInit)
 {
-    if (index >= nbFunc)
+    if(index >= nbFunc)
         return false;
 
-    if (!pFunc)
+    if(!pFunc)
         return false;
 
-    lstrcpy(funcItem[index]._itemName, cmdName);
+    lstrcpy(funcItem[index]._itemName,cmdName);
     funcItem[index]._pFunc = pFunc;
     funcItem[index]._init2Check = check0nInit;
     funcItem[index]._pShKey = sk;
 
     return true;
-}
-
-//----------------------------------------------//
-//-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
-//----------------------------------------------//
-void hello()
-{
-    // Open a new document
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-
-    // Get the current scintilla
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
-        return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
-
-    // Say hello now :
-    // Scintilla control has no Unicode mode, so we use (char *) here
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"Hello, Notepad++!");
-}
-
-void helloDlg()
-{
-    ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
 }

@@ -15,36 +15,40 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#pragma comment(lib, "winmm.lib")
 #include "PluginDefinition.h"
+#include <mmsystem.h>
+#include <string>
+#include <fstream>
 
 extern FuncItem funcItem[nbFunc];
 extern NppData nppData;
+extern bool notifyOnSave;
 
-
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD  reasonForCall, LPVOID /*lpReserved*/)
+BOOL APIENTRY DllMain(HANDLE hModule,DWORD  reasonForCall,LPVOID /*lpReserved*/)
 {
 	try {
 
-		switch (reasonForCall)
+		switch(reasonForCall)
 		{
-			case DLL_PROCESS_ATTACH:
-				pluginInit(hModule);
-				break;
+		case DLL_PROCESS_ATTACH:
+			pluginInit(hModule);
+			break;
 
-			case DLL_PROCESS_DETACH:
-				pluginCleanUp();
-				break;
+		case DLL_PROCESS_DETACH:
+			pluginCleanUp();
+			break;
 
-			case DLL_THREAD_ATTACH:
-				break;
+		case DLL_THREAD_ATTACH:
+			break;
 
-			case DLL_THREAD_DETACH:
-				break;
+		case DLL_THREAD_DETACH:
+			break;
 		}
 	}
-	catch (...) { return FALSE; }
+	catch(...) { return FALSE; }
 
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -54,30 +58,41 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 	commandMenuInit();
 }
 
-extern "C" __declspec(dllexport) const TCHAR * getName()
+extern "C" __declspec(dllexport) const TCHAR* getName()
 {
 	return NPP_PLUGIN_NAME;
 }
 
-extern "C" __declspec(dllexport) FuncItem * getFuncsArray(int *nbF)
+extern "C" __declspec(dllexport) FuncItem* getFuncsArray(int* nbF)
 {
 	*nbF = nbFunc;
 	return funcItem;
 }
 
 
-extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
+extern "C" __declspec(dllexport) void beNotified(SCNotification* notifyCode)
 {
-	switch (notifyCode->nmhdr.code) 
+	switch(notifyCode->nmhdr.code)
 	{
-		case NPPN_SHUTDOWN:
+	case NPPN_SHUTDOWN:
+	{
+		commandMenuCleanUp();
+	}
+	break;
+	case NPPN_FILESAVED:
+	{
+		if(notifyOnSave)
 		{
-			commandMenuCleanUp();
+			LPCWSTR soundFile = L"C:\\Program Files\\Notepad++\\plugins\\AudioNotifications\\File_Saved.wav";
+			if(!PlaySound(soundFile,NULL,SND_FILENAME | SND_ASYNC)) {
+				MessageBox(NULL,TEXT("Failed to play sound!"),TEXT("Save Event Triggered"),MB_OK);
+			}
 		}
-		break;
+	}
+	break;
 
-		default:
-			return;
+	default:
+		return;
 	}
 }
 
@@ -87,19 +102,14 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 // Please let me know if you need to access to some messages :
 // https://github.com/notepad-plus-plus/notepad-plus-plus/issues
 //
-extern "C" __declspec(dllexport) LRESULT messageProc(UINT /*Message*/, WPARAM /*wParam*/, LPARAM /*lParam*/)
-{/*
-	if (Message == WM_MOVE)
-	{
-		::MessageBox(NULL, "move", "", MB_OK);
-	}
-*/
+extern "C" __declspec(dllexport) LRESULT messageProc(UINT /*Message*/,WPARAM /*wParam*/,LPARAM /*lParam*/)
+{
 	return TRUE;
 }
 
 #ifdef UNICODE
 extern "C" __declspec(dllexport) BOOL isUnicode()
 {
-    return TRUE;
+	return TRUE;
 }
 #endif //UNICODE
